@@ -1,4 +1,4 @@
-# MazeGame
+# Maze Blaze
 A third person maze game where the player must reach the maze exit as fast as possible and make an AI character that solves this and similar puzzles
 
 1) Player must reach the maze exit as fast as possible;
