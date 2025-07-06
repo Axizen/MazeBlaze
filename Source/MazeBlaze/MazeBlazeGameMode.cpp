@@ -2,6 +2,7 @@
 #include "MazeBlazeGameInstance.h"
 #include "MazeBlazeCharacter.h"
 #include "MazeBlazePlayerController.h"
+#include "MazeBlazeAIController.h"
 #include "Kismet/GameplayStatics.h"
 
 AMazeBlazeGameMode::AMazeBlazeGameMode()
@@ -9,6 +10,8 @@ AMazeBlazeGameMode::AMazeBlazeGameMode()
 	// Set default values
 	PlayerCharacterClass = nullptr;
 	MazePlayerControllerClass = nullptr;
+	AICharacterClass = nullptr;
+	AIControllerClass = nullptr;
 }
 
 void AMazeBlazeGameMode::BeginPlay()
@@ -43,7 +46,21 @@ void AMazeBlazeGameMode::SetupGameMode()
 	{
 		// Set AI character and controller classes
 		UE_LOG(LogTemp, Display, TEXT("MazeBlazeGameMode: Setting up AI mode"));
-
+		
+		if (AICharacterClass)
+		{
+			DefaultPawnClass = AICharacterClass;
+		}
+		else if (PlayerCharacterClass)
+		{
+			// Fall back to player character class if AI character class is not set
+			DefaultPawnClass = PlayerCharacterClass;
+		}
+		
+		if (AIControllerClass)
+		{
+			PlayerControllerClass = AIControllerClass;
+		}
 	}
 	else
 	{
@@ -59,10 +76,44 @@ void AMazeBlazeGameMode::SetupGameMode()
 		}
 	}
 	
-	// If we already have a player controller, restart the player
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (PC)
+	// Restart all players to apply the changes
+	RestartAllPlayers();
+}
+
+void AMazeBlazeGameMode::RestartGameWithMode(bool bPlayAsAI)
+{
+	// Get the game instance
+	UMazeBlazeGameInstance* GameInstance = Cast<UMazeBlazeGameInstance>(GetGameInstance());
+	if (!GameInstance)
 	{
-		RestartPlayer(PC);
+		UE_LOG(LogTemp, Warning, TEXT("MazeBlazeGameMode: Failed to get game instance, cannot restart game"));
+		return;
+	}
+	
+	// Set the play mode in the game instance
+	GameInstance->SetPlayAsAI(bPlayAsAI);
+	
+	// Setup the game mode with the new settings
+	SetupGameMode();
+}
+
+void AMazeBlazeGameMode::RestartAllPlayers()
+{
+	// Get all player controllers
+	TArray<APlayerController*> PlayerControllers;
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (PC)
+		{
+			// Destroy existing pawns
+			if (PC->GetPawn())
+			{
+				PC->GetPawn()->Destroy();
+			}
+			
+			// Restart the player
+			RestartPlayer(PC);
+		}
 	}
 }

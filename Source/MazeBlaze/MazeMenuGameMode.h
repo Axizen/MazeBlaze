@@ -1,7 +1,8 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Blueprint/UserWidget.h"
 #include "MazeMenuGameMode.generated.h"
 
 // Forward declarations
@@ -25,6 +26,14 @@ public:
 	// Function to play the maze as a player
 	UFUNCTION(BlueprintCallable, Category = "Menu")
 	void PlayAsPlayer();
+
+	// Function to watch the AI solve the maze
+	UFUNCTION(BlueprintCallable, Category = "Menu")
+	void PlayAsAI();
+	
+	// The widget class to use for the main menu
+	UPROPERTY(EditDefaultsOnly, Category = "Menu")
+	TSubclassOf<UUserWidget> MainMenuWidgetClass;
 
 private:
 	// Reference to the created menu widget
